@@ -151,6 +151,28 @@ class TestAllMethods(unittest.TestCase):
     y = sorted(nationality_search(['Brazil'], self.cur, self.conn))
     self.assertEqual(len(y), 3)
     self.assertEqual(y[2], ('Fred', 2, 'Brazil'))
+    
+  def test_make_winners_table(self):
+      self.cur2.execute('SELECT * FROM Winners')
+      winners_list = self.cur2.fetchall()
+    
+      self.assertEqual(len(winners_list[0]), 2)
+      self.assertIs(type(winners_list[0][1]), str)
+
+  def test_make_seasons_table(self):
+      self.cur2.execute('SELECT * FROM Seasons')
+      seasons_list = self.cur2.fetchall()
+
+      self.assertEqual(len(seasons_list[0]), 3)
+      self.assertIs(type(seasons_list[0][0]), int)
+
+
+  def test_winners_since_search(self):
+      winners = winners_since_search("2021", self.cur2, self.conn2)
+      self.assertEqual(winners, {"Manchester City FC": 1})
+
+      winners = winners_since_search("2025", self.cur2, self.conn2)
+      self.assertEqual(winners, {})
 
 
 def main():
