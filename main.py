@@ -82,6 +82,21 @@ def position_birth_search(position, age, cur, conn):
   return cur.fetchall()
 
 
+
+def make_winners_table(data, cur, conn):
+  cur.execute(
+    "CREATE TABLE IF NOT EXISTS Winners (id INTEGER PRIMARY KEY, name TEXT UNIQUE)"
+  )
+
+  for season in data['seasons']:
+    if season.get('winner') is not None:
+      winner_id = season['winner']['id']
+      winner_name = season['winner']['name']
+      cur.execute("INSERT OR IGNORE INTO Winners (id, name) VALUES (?,?)",
+                  (winner_id, winner_name))
+  conn.commit()
+
+
 class TestAllMethods(unittest.TestCase):
 
   def setUp(self):
