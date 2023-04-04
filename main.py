@@ -203,7 +203,7 @@ def make_seasons_table(data, cur, conn):
 
 def winners_since_search(year, cur, conn):
   cur.execute(
-    "SELECT Winners.name, count(*) as wins FROM Seasons JOIN Winners ON Seasons.winner_id = Winners.id WHERE Seasons.end_year >= ? GROUP BY Winners.name ORDER BY wins DESC",
+    "SELECT W.name, COUNT(*) AS total_wins FROM Seasons S INNER JOIN Winners W ON S.winner_id = W.id WHERE S.end_year >= ? GROUP BY W.name ORDER BY total_wins DESC",
     (int(year), ))
   winners = cur.fetchall()
   return {winner[0]: winner[1] for winner in winners}
