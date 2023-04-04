@@ -111,10 +111,9 @@ def nationality_search(countries, cur, conn):
 #     This function returns a list of tuples each containing 
 #     the player’s name, nationality, and birth year. 
 def birthyear_nationality_search(age, nation, cur, conn):
-  threshold_year = 2023 - age
   cur.execute(
     "SELECT name, nationality, birthyear FROM Players WHERE nationality=? AND birthyear<?",
-    (nation, threshold_year))
+    (nation, 2023 - age))
   result = cur.fetchall()
   return result
   
@@ -196,7 +195,7 @@ def make_seasons_table(data, cur, conn):
   )
 
   for season in data['seasons']:
-    if season.get('winner') is not None:
+    if season.get('winner'):
       season_id = season['id']
       winner_id = season['winner']['id']
       end_year = int(season['endDate'][:4])
@@ -207,10 +206,9 @@ def make_seasons_table(data, cur, conn):
 
 
 def winners_since_search(year, cur, conn):
-  year = int(year)
   cur.execute(
     "SELECT Winners.name, COUNT(*) as wins FROM Seasons JOIN Winners ON Seasons.winner_id = Winners.id WHERE Seasons.end_year >= ? GROUP BY Winners.name ORDER BY wins DESC",
-    (year, ))
+    (int(year), ))
   winners = cur.fetchall()
   return {winner[0]: winner[1] for winner in winners}
 
