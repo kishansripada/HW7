@@ -74,6 +74,14 @@ def birthyear_nationality_search(age, country, cur, conn):
   return cur.fetchall()
 
 
+def position_birth_search(position, age, cur, conn):
+  birthyear_threshold = 2023 - age
+  cur.execute(
+    "SELECT P.name, Pos.position, P.birthyear FROM Players P JOIN Positions Pos ON P.position_id = Pos.id WHERE Pos.position=? AND P.birthyear>?",
+    (position, birthyear_threshold))
+  return cur.fetchall()
+
+
 class TestAllMethods(unittest.TestCase):
 
   def setUp(self):
