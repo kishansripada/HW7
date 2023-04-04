@@ -41,45 +41,53 @@ def make_positions_table(data, cur, conn):
 
 
 def make_players_table(data, cur, conn):
-  cur.execute(
-    "CREATE TABLE IF NOT EXISTS Players (id INTEGER PRIMARY KEY, name TEXT, position_id INTEGER, birthyear INTEGER, nationality TEXT)"
-  )
-  for player in data['squad']:
-    cur.execute("SELECT id FROM Positions WHERE position=?",
-                (player['position'], ))
-    position_id = cur.fetchone()[0]
-    birthyear = int(player['dateOfBirth'][:4])
     cur.execute(
-      "INSERT OR IGNORE INTO Players (id, name, position_id, birthyear, nationality) VALUES (?,?,?,?,?)",
-      (player['id'], player['name'], position_id, birthyear,
-       player['nationality']))
-  conn.commit()
+        "CREATE TABLE IF NOT EXISTS Players (id INTEGER PRIMARY KEY, name TEXT, position_id INTEGER, birthyear INTEGER, nationality TEXT)"
+    )
 
+    for player in data['squad']:
+        cur.execute("SELECT id FROM Positions WHERE position=?",
+                    (player['position'],))
+        position_id_result = cur.fetchone()
+        if position_id_result:
+            position_id = position_id_result[0]
+        else:
+            position_id = None
+
+        birth_year = int(player['dateOfBirth'].split('-')[0])
+
+        cur.execute(
+            "INSERT OR IGNORE INTO Players (id, name, position_id, birthyear, nationality) VALUES (?,?,?,?,?)",
+            (player['id'], player['name'], position_id, birth_year,
+             player['nationality']))
+    conn.commit()
 
 def nationality_search(countries, cur, conn):
-  results = []
-  for country in countries:
+    player_data = []
+    for nation in countries:
+        cur.execute(
+            "SELECT name, position_id, nationality FROM Players WHERE nationality=?",
+            (nation, ))
+        player_data += cur.fetchall()
+    return player_data
+
+
+def search_birthyear_nationality(age, nation, cur, conn):
+    threshold_year = 2023 - age
     cur.execute(
-      "SELECT name, position_id, nationality FROM Players WHERE nationality=?",
-      (country, ))
-    results.extend(cur.fetchall())
-  return results
+        "SELECT name, nationality, birthyear FROM Players WHERE nationality=? AND birthyear<?",
+        (nation, threshold_year))
+    result = cur.fetchall()
+    return result
 
 
-def birthyear_nationality_search(age, country, cur, conn):
-  birthyear_threshold = 2023 - age
-  cur.execute(
-    "SELECT name, nationality, birthyear FROM Players WHERE nationality=? AND birthyear<?",
-    (country, birthyear_threshold))
-  return cur.fetchall()
 
-
-def position_birth_search(position, age, cur, conn):
-  birthyear_threshold = 2023 - age
-  cur.execute(
-    "SELECT P.name, Pos.position, P.birthyear FROM Players P JOIN Positions Pos ON P.position_id = Pos.id WHERE Pos.position=? AND P.birthyear>?",
-    (position, birthyear_threshold))
-  return cur.fetchall()
+def search_position_birth(position, age, cur, conn):
+    cur.execute(
+        "SELECT Pl.name, Po.position, Pl.birthyear FROM Players Pl JOIN Positions Po ON Pl.position_id = Po.id WHERE Po.position=? AND Pl.birthyear>?",
+        (position, 2023 - age))
+    result = cur.fetchall()
+    return result
 
 
 def make_winners_table(data, cur, conn):
