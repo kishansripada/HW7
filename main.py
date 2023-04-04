@@ -26,19 +26,15 @@ def open_database(db_name):
 
 
 def make_positions_table(data, cur, conn):
-  positions = []
-  for player in data['squad']:
-    position = player['position']
-    if position not in positions:
-      positions.append(position)
-  cur.execute(
-    "CREATE TABLE IF NOT EXISTS Positions (id INTEGER PRIMARY KEY, position TEXT UNIQUE)"
-  )
-  for i in range(len(positions)):
-    cur.execute("INSERT OR IGNORE INTO Positions (id, position) VALUES (?,?)",
-                (i, positions[i]))
-  conn.commit()
-
+    positions = []
+    for player in data['squad']:
+        position = player['position']
+        if position not in positions:
+            positions.append(position)
+    cur.execute("CREATE TABLE IF NOT EXISTS Positions (id INTEGER PRIMARY KEY, position TEXT UNIQUE)")
+    for i in range(len(positions)):
+        cur.execute("INSERT OR IGNORE INTO Positions (id, position) VALUES (?,?)",(i, positions[i]))
+    conn.commit()
 ## [TASK 1]: 25 points
 # Finish the function make_players_table
 
@@ -58,7 +54,7 @@ def make_positions_table(data, cur, conn):
 #     created for you -- see make_positions_table above for details.
 def make_players_table(data, cur, conn):
   cur.execute(
-    "CREATE TABLE IF NOT EXISTS Players (id INTEGER PRIMARY KEY, name TEXT, position_id INTEGER, birthyear INTEGER, nationality TEXT)"
+    "create table if not exists Players (id integer PRIMARY KEY, name TEXT, position_id INTEGER, birthyear INTEGER, nationality TEXT)"
   )
 
   for player in data['squad']:
@@ -70,10 +66,10 @@ def make_players_table(data, cur, conn):
     else:
       position_id = None
 
-    birth_year = int(player['dateOfBirth'].split('-')[0])
-
+    birth_year = player['dateOfBirth'].split('-')[0]
+    birth_year= int(birth_year)
     cur.execute(
-      "INSERT OR IGNORE INTO Players (id, name, position_id, birthyear, nationality) VALUES (?,?,?,?,?)",
+      "insert or ignore into Players (id, name, position_id, birthyear, nationality) VALUES (?,?,?,?,?)",
       (player['id'], player['name'], position_id, birth_year,
        player['nationality']))
   conn.commit()
@@ -91,7 +87,7 @@ def nationality_search(countries, cur, conn):
   player_data = []
   for nation in countries:
     cur.execute(
-      "SELECT name, position_id, nationality FROM Players WHERE nationality=?",
+      "select name, position_id, nationality FROM Players where nationality=?",
       (nation, ))
     player_data += cur.fetchall()
   return player_data
@@ -112,7 +108,7 @@ def nationality_search(countries, cur, conn):
 #     the player’s name, nationality, and birth year. 
 def birthyear_nationality_search(age, nation, cur, conn):
   cur.execute(
-    "SELECT name, nationality, birthyear FROM Players WHERE nationality=? AND birthyear<?",
+    "select name, nationality, birthyear from Players where nationality=? AND birthyear<?",
     (nation, 2023 - age))
   result = cur.fetchall()
   return result
@@ -135,7 +131,7 @@ def birthyear_nationality_search(age, nation, cur, conn):
     # HINT: You'll have to use JOIN for this task.
 def position_birth_search(position, age, cur, conn):
   cur.execute(
-    "SELECT Pl.name, Po.position, Pl.birthyear FROM Players Pl JOIN Positions Po ON Pl.position_id = Po.id WHERE Po.position=? AND Pl.birthyear>?",
+    "select Pl.name, Po.position, Pl.birthyear FROM Players Pl JOIN Positions Po ON Pl.position_id = Po.id where Po.position=? AND Pl.birthyear>?",
     (position, 2023 - age))
   result = cur.fetchall()
   return result
@@ -177,15 +173,15 @@ def position_birth_search(position, age, cur, conn):
 
 def make_winners_table(data, cur, conn):
   cur.execute(
-    "CREATE TABLE IF NOT EXISTS Winners (id INTEGER PRIMARY KEY, name TEXT UNIQUE)"
+    "create table if not exists Winners (id INTEGER PRIMARY KEY, name TEXT UNIQUE)"
   )
 
   for season in data['seasons']:
     if season.get('winner') is not None:
-      winner_id = season['winner']['id']
-      winner_name = season['winner']['name']
-      cur.execute("INSERT OR IGNORE INTO Winners (id, name) VALUES (?,?)",
-                  (winner_id, winner_name))
+      id = season['winner']['id']
+      name = season['winner']['name']
+      cur.execute("insert OR ignore INTO Winners (id, name) VALUES (?,?)",
+                  (id, name))
   conn.commit()
 
 
@@ -207,7 +203,7 @@ def make_seasons_table(data, cur, conn):
 
 def winners_since_search(year, cur, conn):
   cur.execute(
-    "SELECT Winners.name, COUNT(*) as wins FROM Seasons JOIN Winners ON Seasons.winner_id = Winners.id WHERE Seasons.end_year >= ? GROUP BY Winners.name ORDER BY wins DESC",
+    "SELECT Winners.name, count(*) as wins FROM Seasons JOIN Winners ON Seasons.winner_id = Winners.id WHERE Seasons.end_year >= ? GROUP BY Winners.name ORDER BY wins DESC",
     (int(year), ))
   winners = cur.fetchall()
   return {winner[0]: winner[1] for winner in winners}
@@ -289,8 +285,8 @@ class TestAllMethods(unittest.TestCase):
 
 def main():
 
-  #### FEEL FREE TO USE THIS SPACE TO TEST OUT YOUR FUNCTIONS
-
+  # test_winners_since_search()
+    # test_make_seasons_table()
   json_data = read_data('football.json')
   cur, conn = open_database('Football.db')
   make_positions_table(json_data, cur, conn)
