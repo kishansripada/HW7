@@ -82,7 +82,6 @@ def position_birth_search(position, age, cur, conn):
   return cur.fetchall()
 
 
-
 def make_winners_table(data, cur, conn):
   cur.execute(
     "CREATE TABLE IF NOT EXISTS Winners (id INTEGER PRIMARY KEY, name TEXT UNIQUE)"
@@ -95,6 +94,31 @@ def make_winners_table(data, cur, conn):
       cur.execute("INSERT OR IGNORE INTO Winners (id, name) VALUES (?,?)",
                   (winner_id, winner_name))
   conn.commit()
+
+
+def make_seasons_table(data, cur, conn):
+  cur.execute(
+    "CREATE TABLE IF NOT EXISTS Seasons (id INTEGER PRIMARY KEY, winner_id INTEGER, end_year INTEGER)"
+  )
+
+  for season in data['seasons']:
+    if season.get('winner') is not None:
+      season_id = season['id']
+      winner_id = season['winner']['id']
+      end_year = int(season['endDate'][:4])
+      cur.execute(
+        "INSERT OR IGNORE INTO Seasons (id, winner_id, end_year) VALUES (?,?,?)",
+        (season_id, winner_id, end_year))
+  conn.commit()
+
+
+def winners_since_search(year, cur, conn):
+  year = int(year)
+  cur.execute(
+    "SELECT Winners.name, COUNT(*) as wins FROM Seasons JOIN Winners ON Seasons.winner_id = Winners.id WHERE Seasons.end_year >= ? GROUP BY Winners.name ORDER BY wins DESC",
+    (year, ))
+  winners = cur.fetchall()
+  return {winner[0]: winner[1] for winner in winners}
 
 
 class TestAllMethods(unittest.TestCase):
